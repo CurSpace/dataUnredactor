@@ -120,12 +120,12 @@ def extractFeatures(train,valid,test):
 # Do lemmetization
 # Dictionary vectorizer gives bad results
 # The merging of vectorizer dose not 
-def training(X_train,y_train,X_valid):
+def training(X_train,y_train,X_test):
 
     y_train = np.array(y_train)    
     model = MultinomialNB()
     model.fit(X_train,y_train)
-    predictions = model.predict(X_valid)
+    predictions = model.predict(X_test)
     return predictions
 # Training set is the one that the class made
 
@@ -139,14 +139,14 @@ def training(X_train,y_train,X_valid):
 
 # calculate scores
 def metrics(y_train,predictions):
-    return precision_score(y_valid, predictions, average='macro'), recall_score(y_valid, predictions, average='macro'), f1_score(y_valid, predictions, average='macro')
+    return precision_score(y_test, predictions, average='macro'), recall_score(y_test, predictions, average='macro'), f1_score(y_test, predictions, average='macro')
 
 if __name__ == '__main__':
     train,valid,test =  splitData(sys.argv[-1])
     X_train, X_valid, X_test, y_train, y_valid, y_test  = extractFeatures(train,valid,test)
 
     print(X_train.shape,X_valid.shape,X_test.shape)
-    predictions = training(X_train,y_train,X_valid)
+    predictions = training(X_train,y_train,X_test)
     print(predictions)
     print(len(predictions))
     precision, accuracy, recall = metrics(y_train,predictions)
