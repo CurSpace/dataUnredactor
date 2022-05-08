@@ -18,6 +18,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import precision_score, recall_score, f1_score
 import re
 from nltk.stem import WordNetLemmatizer
+import pickle
 
 def preprocess(review):
     review = str(review)
@@ -47,6 +48,7 @@ def splitData(glob_text):
     train = df.loc[df['dataType'] == 'training']
     valid = df.loc[df['dataType'] == 'validation']
     test = df.loc[df['dataType'] == 'testing']
+    print(train)
     return train,valid,test
    # for row in dfx.iterrows():
        # print(row)
@@ -105,16 +107,17 @@ def extractFeatures(train,valid,test):
     # corpus_test = X_train
     # vectorizer_test = TfidfVectorizer(max_features =2000)
     # X_tes = vectorizer_test.fit_transform(corpus_test)
-
+    print(X_train)
     corpus_train = X_train
+    print(corpus_train)
     vectorizer_train = CountVectorizer(stop_words = 'english')
     X_train = vectorizer_train.fit_transform(corpus_train)
     corpus_valid = X_valid
     vectorizer_valid = CountVectorizer(stop_words = 'english', vocabulary = vectorizer_train.vocabulary_)
-    X_valid = vectorizer_valid.fit_transform(corpus_valid)
+    X_valid = vectorizer_train.transform(corpus_valid)
     corpus_test = X_test
     vectorizer_test = CountVectorizer(stop_words = 'english', vocabulary = vectorizer_train.vocabulary_ )
-    X_test = vectorizer_test.fit_transform(corpus_test)
+    X_test = vectorizer_train.transform(corpus_test)
     return X_train,X_valid,X_test,y_train,y_valid,y_test
 
 # Train model to predict missing names
@@ -128,6 +131,8 @@ def training(X_train,y_train,X_test):
     y_train = np.array(y_train)    
     model = MultinomialNB()
     model.fit(X_train,y_train)
+    with open('model.pkl','wb') as f:
+        pickle.dump(model,f)
     predictions = model.predict(X_test)
 #    print(predictions)
     return predictions
