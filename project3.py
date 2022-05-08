@@ -22,6 +22,7 @@ from nltk.stem import WordNetLemmatizer
 def preprocess(review):
     review = str(review)
     review = re.sub('[^A-Za-z0-9]+', ' ', review)
+    review = review.lower()
     lemmatizer = WordNetLemmatizer()
    # review = review.replace('.',' ')
    # review = review.replace(',',' ')
@@ -42,7 +43,7 @@ def splitData(glob_text):
     pd.set_option('display.max_colwidth', None)
     df.columns = ['gitId','dataType','label','review']
     df['review'] = df['review'].apply(preprocess)
-    print(df.head())
+ #   print(df.head())
     train = df.loc[df['dataType'] == 'training']
     valid = df.loc[df['dataType'] == 'validation']
     test = df.loc[df['dataType'] == 'testing']
@@ -90,9 +91,11 @@ def extractFeatures(train,valid,test):
     X_train = train['review']
     X_valid = valid['review']
     X_test = test['review']
-    y_train = train['label']
-    y_valid = valid['label']
-    y_test = test['label']
+    y_train = train['label'].str.lower()
+    y_train.to_csv('Y_train')
+    y_valid = valid['label'].str.lower()
+    y_test = test['label'].str.lower()
+    y_test.to_csv('Y_test')
     # corpus_train = X_train
     # vectorizer_train = TfidfVectorizer(max_features = 2000)
     # X_t = vectorizer_train.fit_transform(corpus_train)
@@ -126,6 +129,7 @@ def training(X_train,y_train,X_test):
     model = MultinomialNB()
     model.fit(X_train,y_train)
     predictions = model.predict(X_test)
+#    print(predictions)
     return predictions
 # Training set is the one that the class made
 
@@ -149,5 +153,5 @@ if __name__ == '__main__':
     predictions = training(X_train,y_train,X_test)
     print(predictions)
     print(len(predictions))
-    precision, accuracy, recall = metrics(y_train,predictions)
-    print(precision, accuracy, recall)
+    precision, accuracy, f1_score = metrics(y_train,predictions)
+    print(precision, accuracy, f1_score)
