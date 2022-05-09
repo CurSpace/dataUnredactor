@@ -1,8 +1,6 @@
 # DO test train split
-import sys
+
 import pandas as pd
-import glob
-import io
 import warnings
 import numpy as np
 warnings.filterwarnings("ignore")
@@ -79,7 +77,6 @@ def training(X_train,y_train,X_test):
     parameters = {'alpha': (1, 0.1, 0.01, 0.001, 0.0001, 0.00001)}
     grid_search= GridSearchCV(model, parameters)
     grid_search.fit(X_train,y_train)
-    #model.fit(X_train,y_train)
     predictions = grid_search.predict(X_test)
     return predictions
 
@@ -93,9 +90,7 @@ if __name__ == '__main__':
     data = "unredactor.tsv"
     updatedData = "https://raw.githubusercontent.com/cegme/cs5293sp22/main/unredactor.tsv"
     train,valid,test =  splitData(data,flag = 0)
-    print(train.shape,valid.shape,test.shape)
     X_train, X_valid, X_test, y_train, y_valid, y_test  = extractFeatures(train,valid,test)
-    print(X_train.shape, X_valid.shape, X_test.shape, y_train.shape, y_valid.shape, y_test.shape)
     predictions = training(X_train,y_train,X_test)
     pred  = list(sorted(zip(*np.unique(predictions, return_counts=True)), key=lambda x: x[1], reverse=True))
     pred = pred[0:20]
