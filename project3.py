@@ -18,23 +18,24 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import precision_score, recall_score, f1_score
 import re
 from nltk.stem import WordNetLemmatizer
-import pickle
+from sklearn.model_selection import GridSearchCV
 
 def preprocess(review):
     review = str(review)
     review = re.sub('[^A-Za-z0-9]+', ' ', review)
     review = review.lower()
     lemmatizer = WordNetLemmatizer()
-   # review = review.replace('.',' ')
-   # review = review.replace(',',' ')
     review =' '.join([lemmatizer.lemmatize(word) for word in review.split()])
     return review
 
 
 
-def splitData(glob_text):
+def splitData(data,flag):
     dlst = []
-    df= pd.read_csv(glob_text, sep = '\t')
+    if flag == 0:
+         df= pd.read_csv(updatedData, sep = '\t', quotechar = None, quoting=3, on_bad_lines = 'skip')
+    else:
+        df= pd.read_csv(data, sep = '\t', quotechar = None, quoting=3, on_bad_lines = 'skip')
     df.loc[-1] = df.columns
     df.index = df.index + 1
     df.sort_index(inplace = True)
@@ -44,72 +45,22 @@ def splitData(glob_text):
     pd.set_option('display.max_colwidth', None)
     df.columns = ['gitId','dataType','label','review']
     df['review'] = df['review'].apply(preprocess)
- #   print(df.head())
     train = df.loc[df['dataType'] == 'training']
     valid = df.loc[df['dataType'] == 'validation']
     test = df.loc[df['dataType'] == 'testing']
-    print(train)
     return train,valid,test
-   # for row in dfx.iterrows():
-       # print(row)
-# extract features from data to train the model
-
-
-
    
-# def preprocess(data,valid,test):
-#    X_t = data['review']
-#    X_v = valid['review']
-#    X_tes = test['review']
-#    y_train = data['label']
-#    y_valid = valid['label']
-#    y_test = test['label']
-
-#    stopwords = nlp.Defaults.stop_words
-  #  print(data.head())
-#    X_train = []
-#    for review in X_t:
-#        text_tokens = word_tokenize(review)
-#        tokens_without_sw = [word for word in text_tokens if not word in stopwords]
-#        ureview = " ".join(tokens_without_sw)
-#        X_train.append(ureview)
-#    X_valid = []
-#    for review in X_v:
-#        text_tokens = word_tokenize(review)
-#        tokens_without_sw = [word for word in text_tokens if not word in stopwords]
-#        ureview = " ".join(tokens_without_sw)
-#        X_valid.append(ureview)
-#     X_test = []
-#    for review in X_tes:
-#        text_tokens = word_tokenize(review)
-#        tokens_without_sw = [word for word in text_tokens if not word in stopwords]
-#        ureview = " ".join(tokens_without_sw)
-#        X_test.append(ureview)
-#    return X_train, X_valid, X_test, y_train, y_valid, y_test
-
-# get features using count and dictionary vectorizer and combine them
 def extractFeatures(train,valid,test):
     ''' Vecotrizing the data after stopwords have been removed'''
-    X_train = train['review']
-    X_valid = valid['review']
-    X_test = test['review']
+    X_train = train['review'].str.lower()
+    X_valid = valid['review'].str.lower()
+    X_test = test['review'].str.lower()
     y_train = train['label'].str.lower()
-    y_train.to_csv('Y_train')
     y_valid = valid['label'].str.lower()
     y_test = test['label'].str.lower()
-    y_test.to_csv('Y_test')
-    # corpus_train = X_train
-    # vectorizer_train = TfidfVectorizer(max_features = 2000)
-    # X_t = vectorizer_train.fit_transform(corpus_train)
-    # corpus_valid = X_valid
-    # vectorizer_valid = TfidfVectorizer(max_features = 2000)
-    # X_v = vectorizer_valid.fit_transform(corpus_valid)
-    # corpus_test = X_train
-    # vectorizer_test = TfidfVectorizer(max_features =2000)
-    # X_tes = vectorizer_test.fit_transform(corpus_test)
-    print(X_train)
+
+    
     corpus_train = X_train
-    print(corpus_train)
     vectorizer_train = CountVectorizer(stop_words = 'english')
     X_train = vectorizer_train.fit_transform(corpus_train)
     corpus_valid = X_valid
@@ -120,43 +71,34 @@ def extractFeatures(train,valid,test):
     X_test = vectorizer_train.transform(corpus_test)
     return X_train,X_valid,X_test,y_train,y_valid,y_test
 
-# Train model to predict missing names
 
-# Normalize the data
-# Do lemmetization
-# Dictionary vectorizer gives bad results
-# The merging of vectorizer dose not 
 def training(X_train,y_train,X_test):
 
     y_train = np.array(y_train)    
     model = MultinomialNB()
-    model.fit(X_train,y_train)
-    with open('model.pkl','wb') as f:
-        pickle.dump(model,f)
-    predictions = model.predict(X_test)
-#    print(predictions)
+    parameters = {'alpha': (1, 0.1, 0.01, 0.001, 0.0001, 0.00001)}
+    grid_search= GridSearchCV(model, parameters)
+    grid_search.fit(X_train,y_train)
+    #model.fit(X_train,y_train)
+    predictions = grid_search.predict(X_test)
     return predictions
-# Training set is the one that the class made
 
-# Look at 2nd column to see if training,valid or testing data
 
-# 3rd columns is the lable
 
-# 4th colunm is the actual sentence with the blank we have to fill
-
-# Every input has only one redaction
-
-# calculate scores
-def metrics(y_train,predictions):
+def metrics(y_test,predictions):
     return precision_score(y_test, predictions, average='macro'), recall_score(y_test, predictions, average='macro'), f1_score(y_test, predictions, average='macro')
 
 if __name__ == '__main__':
-    train,valid,test =  splitData(sys.argv[-1])
+    
+    data = "unredactor.tsv"
+    updatedData = "https://raw.githubusercontent.com/cegme/cs5293sp22/main/unredactor.tsv"
+    train,valid,test =  splitData(data,flag = 0)
+    print(train.shape,valid.shape,test.shape)
     X_train, X_valid, X_test, y_train, y_valid, y_test  = extractFeatures(train,valid,test)
-
-    print(X_train.shape,X_valid.shape,X_test.shape)
+    print(X_train.shape, X_valid.shape, X_test.shape, y_train.shape, y_valid.shape, y_test.shape)
     predictions = training(X_train,y_train,X_test)
-    print(predictions)
-    print(len(predictions))
-    precision, accuracy, f1_score = metrics(y_train,predictions)
-    print(precision, accuracy, f1_score)
+    pred  = list(sorted(zip(*np.unique(predictions, return_counts=True)), key=lambda x: x[1], reverse=True))
+    pred = pred[0:20]
+    print(pred)
+    precision, recall, f1_score = metrics(y_test,predictions)
+    print("Precision: ",precision, "Recall:",recall,"F1 Score:",f1_score)

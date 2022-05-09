@@ -10,6 +10,7 @@ en_core_web_sm = {file = "https://github.com/explosion/spacy-models/releases/dow
 nltk = "*"
 sklearn = "*"
 numpy = "*"
+pytest = "*"
 
 [dev-packages]
 
