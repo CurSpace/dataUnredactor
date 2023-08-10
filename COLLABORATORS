@@ -1,7 +1,0 @@
-https://stackoverflow.com/questions/17071871/how-do-i-select-rows-from-a-dataframe-based-on-column-valu | split data
-
-https://stackoverflow.com/questions/5843518/remove-all-special-characters-punctuation-and-spaces-from-string | remove special characters from data 
-
-https://stackoverflow.com/questions/23464138/downloading-and-accessing-data-from-github-python | getting updated from github
-
-Aditya Rohan Singh | Suggested to use zip to print the first 20 predicitions along with their frequencies and helped to understand writing better test functions and to use a flag for getting local data for test because im testing for a fixed size.
